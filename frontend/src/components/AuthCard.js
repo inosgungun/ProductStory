@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -7,6 +8,7 @@ export default function AuthCard() {
   const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const router = useRouter();
 
   const handleSendOtp = async () => {
     try {
@@ -33,11 +35,13 @@ export default function AuthCard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success && data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
         toast.success("Login successful!");
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       } else {
-        toast.error("Invalid OTP");
+        toast.error(data.message || "Invalid OTP");
       }
     } catch (err) {
       toast.error("Error verifying OTP");

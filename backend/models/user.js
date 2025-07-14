@@ -5,10 +5,10 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   contact: String,
   address: String,
-  wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
-  cart: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+  wishlist: [{ type: Number }],
+  cart: [{ productId: { type: Number }, quantity: { type: Number, default: 1 } }],
   orderHistory: [{
-    productId: mongoose.Schema.Types.ObjectId,
+    productId: Number,
     quantity: Number,
     orderDate: Date
   }]

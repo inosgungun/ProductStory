@@ -124,6 +124,177 @@ app.get("/api/get-profile", async (req, res) => {
   }
 });
 
+app.post("/api/wishlist/check", async (req, res) => {
+  const { email, productId } = req.body;
+  if (!email || !productId) {
+    return res.status(400).send({ success: false, message: "Missing email or productId" });
+  }
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send({ success: false, message: "User not found" });
+    const inWishlist = user.wishlist.some(item => item.toString() === productId);
+    res.send({ success: true, inWishlist });
+  } catch (error) {
+    console.error("Wishlist check error:", error);
+    res.status(500).send({ success: false, message: "Server error" });
+  }
+});
+
+app.post("/api/wishlist/toggle", async (req, res) => {
+  const { email, productId } = req.body;
+  const productIdNumber = Number(productId);
+
+  if (!email || !productId) {
+    return res.status(400).send({ success: false, message: "Missing email or productId" });
+  }
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send({ success: false, message: "User not found" });
+
+    const index = user.wishlist.findIndex(item => item === productIdNumber);
+    let inWishlist;
+    if (index > -1) {
+      user.wishlist.splice(index, 1);
+      inWishlist = false;
+    } else {
+      user.wishlist.push(productIdNumber);
+      inWishlist = true;
+    }
+    await user.save();
+    res.send({ success: true, inWishlist, wishlist: user.wishlist });
+  } catch (error) {
+    console.error("Wishlist toggle error:", error);
+    res.status(500).send({ success: false, message: "Server error" });
+  }
+});
+
+app.post("/api/cart/add", async (req, res) => {
+  const { email, productId } = req.body;
+  if (!email || !productId) {
+    return res.status(400).send({ success: false, message: "Missing email or productId" });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send({ success: false, message: "User not found" });
+    
+    const productIdNumber = Number(productId);
+    if (isNaN(productIdNumber)) {
+      return res.status(400).send({ success: false, message: "Invalid productId" });
+    }
+    
+    const existingItem = user.cart.find(item => item.productId === productIdNumber);
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      user.cart.push({ productId: productIdNumber, quantity: 1 });
+    }
+
+    await user.save();
+    res.send({ success: true, cart: user.cart });
+  } catch (error) {
+    console.error("Add to cart error:", error);
+    res.status(500).send({ success: false, message: "Server error" });
+  }
+});
+
+app.get("/api/cart", async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ success: false, message: "Email is required" });
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const productIds = user.cart.map(item => item.productId);
+    const products = await Product.find({ id: { $in: productIds } }).lean();
+
+    const cartWithDetails = user.cart.map(item => {
+      const product = products.find(p => String(p.id) === String(item.productId));
+      if (product) {
+        return {
+          productId: item.productId,
+          quantity: item.quantity,
+          price: Number(product.price) || 0,
+          discountPercentage: Number(product.discountPercentage) || 0,
+          name: product.title || "Unnamed",
+          image: product.thumbnail || ""
+        };
+      }
+      return null;
+    }).filter(Boolean);
+
+    res.json({ success: true, cart: cartWithDetails });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+app.post("/api/cart/update", async (req, res) => {
+  const { email, productId, quantity } = req.body;
+  if (!email || !productId) {
+    return res.status(400).send({ success: false, message: "Missing data" });
+  }
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send({ success: false, message: "User not found" });
+
+    const existing = user.cart.find(item => item.productId === productId);
+    if (existing) {
+      if (quantity <= 0) {
+        user.cart = user.cart.filter(item => item.productId !== productId);
+      } else {
+        existing.quantity = quantity;
+      }
+    } else if (quantity > 0) {
+      user.cart.push({ productId, quantity });
+    }
+
+    await user.save();
+
+    const productIds = user.cart.map(item => item.productId);
+    const products = await Product.find({ id: { $in: productIds } });
+    const cartWithDetails = user.cart.map(item => {
+      const product = products.find(p => p.id === item.productId);
+      if (product) {
+        return {
+          productId: item.productId,
+          quantity: item.quantity,
+          price: product.price,
+          discountPercentage: product.discountPercentage,
+          name: product.title,
+          image: product.thumbnail
+        };
+      } else {
+        return null;
+      }
+    }).filter(Boolean);
+
+    res.send({ success: true, cart: cartWithDetails });
+  } catch (error) {
+    console.error("Update cart error:", error);
+    res.status(500).send({ success: false, message: "Server error" });
+  }
+});
+
+
+app.get("/api/wishlist", async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).send({ success: false, message: "Email is required" });
+  }
+  try {
+    const user = await User.findOne({ email }).populate("wishlist");
+    if (!user) return res.status(404).send({ success: false, message: "User not found" });
+    res.send({ success: true, wishlist: user.wishlist });
+  } catch (error) {
+    console.error("Get wishlist error:", error);
+    res.status(500).send({ success: false, message: "Server error" });
+  }
+});
+
+
 const PORT = process.env.PORT || 5000;
 connectDB()
   .then(() => {
