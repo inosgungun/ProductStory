@@ -94,6 +94,11 @@ npm install
 NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
 ```
 
+### ▶️ Run the frontend 
+```
+npm run dev
+```
+
 ## ✉️ Contact
 
 Created with ❤️ by [Gungun Soni](https://github.com/inosgungun).
