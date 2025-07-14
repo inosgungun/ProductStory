@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { Star, Tag, Package, Truck, Ruler, Shield, Box, Info, Calendar, Barcode, ChevronRight, Check, ShoppingCart, Heart, Share2 } from "lucide-react";
+import { Star, HeartIcon, Tag, Package, Truck, RefreshCw, Ruler, Shield, Box, Info, Calendar, Barcode, ChevronRight, Check, ShoppingCart, Heart, Share2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
@@ -49,23 +49,23 @@ export default function ProductPage({ product }) {
 
 
   const toggleWishlist = async () => {
-  if (!email || !product.id) return toast.error("Missing user or product info");
-  console.log("Toggling wishlist:", email, product.id);
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/wishlist/toggle`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, productId: Number(product.id) })
-    });
-    const data = await res.json();
-    console.log("Toggle wishlist response:", data);
-    setInWishlist(data.inWishlist);
-    toast.success(data.inWishlist ? "Added to Wishlist" : "Removed from Wishlist");
-  } catch (error) {
-    console.error(error);
-    toast.error("Failed to update wishlist");
-  }
-};
+    if (!email || !product.id) return toast.error("Missing user or product info");
+    console.log("Toggling wishlist:", email, product.id);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/wishlist/toggle`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, productId: Number(product.id) })
+      });
+      const data = await res.json();
+      console.log("Toggle wishlist response:", data);
+      setInWishlist(data.inWishlist);
+      toast.success(data.inWishlist ? "Added to Wishlist" : "Removed from Wishlist");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update wishlist");
+    }
+  };
 
 
 
@@ -159,7 +159,7 @@ export default function ProductPage({ product }) {
                   </div>
                 </div>
 
-                <div className="flex-shrink-0">
+                <div className="-mt-6 mb-4 flex-shrink-0">
                   <Image
                     src={product.meta.qrCode}
                     alt="QR Code"
@@ -205,11 +205,14 @@ export default function ProductPage({ product }) {
                 </button>
                 <button
                   onClick={toggleWishlist}
-                  className={`flex items-center justify-center p-3 border rounded-lg transition-colors 
-        ${inWishlist ? "border-red-300 bg-red-50 text-red-500" : "border-gray-300 hover:bg-gray-50 text-gray-700"}`}
-
+                  className={`flex items-center justify-center p-3 rounded-lg transition-colors
+    ${inWishlist ? "bg-red-50 text-red-500 " : "hover:bg-gray-100 border border-gray-600 text-gray-700"}`}
                 >
-                  <Heart className="w-5 h-5" />
+                  {inWishlist ? (
+                    <Heart fill="currentColor" className="w-5 h-5 text-red-500 border-b-red-500" />
+                  ) : (
+                    <Heart className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -304,20 +307,27 @@ export default function ProductPage({ product }) {
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">Metadata</h3>
-                  <div className="space-y-2 text-gray-700">
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">Created</span>
+                  <div className="space-y-3 text-gray-700">
+                    <p className="flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-gray-500">
+                        <Calendar className="w-4 h-4" /> Created
+                      </span>
                       <span>{new Date(product.meta.createdAt).toLocaleDateString()}</span>
                     </p>
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">Updated</span>
+                    <p className="flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-gray-500">
+                        <RefreshCw className="w-4 h-4" /> Updated
+                      </span>
                       <span>{new Date(product.meta.updatedAt).toLocaleDateString()}</span>
                     </p>
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">Barcode</span>
+                    <p className="flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-gray-500">
+                        <Barcode className="w-4 h-4 " /> Barcode
+                      </span>
                       <span>{product.meta.barcode}</span>
                     </p>
                   </div>
+
                 </div>
               </div>
             </div>

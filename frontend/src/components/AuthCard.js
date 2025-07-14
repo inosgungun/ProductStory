@@ -8,6 +8,8 @@ export default function AuthCard() {
   const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [isResending, setIsResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0); // cooldown seconds
   const router = useRouter();
 
   const handleSendOtp = async () => {
@@ -20,6 +22,7 @@ export default function AuthCard() {
       if (res.ok) {
         toast.success("OTP sent to your email!");
         setStep("otp");
+        startCooldown(); // start cooldown after sending OTP
       } else {
         toast.error("Failed to send OTP");
       }
@@ -46,6 +49,26 @@ export default function AuthCard() {
     } catch (err) {
       toast.error("Error verifying OTP");
     }
+  };
+
+  const handleResendOtp = async () => {
+    if (cooldown > 0) return; // prevent resending if cooldown active
+    setIsResending(true);
+    await handleSendOtp();
+    setIsResending(false);
+  };
+
+  const startCooldown = () => {
+    setCooldown(30); // set cooldown seconds
+    const interval = setInterval(() => {
+      setCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   return (
@@ -80,9 +103,20 @@ export default function AuthCard() {
             />
             <button
               onClick={handleVerifyOtp}
-              className="bg-gray-800 text-white w-full py-2 rounded hover:bg-gray-700"
+              className="bg-gray-800 text-white w-full py-2 rounded hover:bg-gray-700 mb-2"
             >
               Login
+            </button>
+            <button
+              onClick={handleResendOtp}
+              disabled={isResending || cooldown > 0}
+              className={`w-full py-2 rounded border ${
+                isResending || cooldown > 0
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-white text-gray-800 hover:bg-gray-200"
+              }`}
+            >
+              {cooldown > 0 ? `Resend OTP in ${cooldown}s` : "Resend OTP"}
             </button>
           </>
         )}

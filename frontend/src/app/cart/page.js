@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "react-toastify"; 
 
 export default function CartPage() {
   const router = useRouter();
@@ -10,25 +10,28 @@ export default function CartPage() {
 
   useEffect(() => {
     const fetchCart = async () => {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!user?.email) return;
-
       try {
+        const userStr = localStorage.getItem("user");
+        if (!userStr) return;
+        const user = JSON.parse(userStr);
+        if (!user?.email) return;
+
         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/cart?email=${encodeURIComponent(user.email)}`);
         const data = await res.json();
         console.log("Fetched cart:", data);
         if (data.success && Array.isArray(data.cart)) {
           setCartItems(data.cart);
         } else {
-          toast.error("Failed to load cart");
+          toast.error(data.message || "Failed to load cart");
         }
       } catch (error) {
-        console.error(error);
+        console.error("Fetch cart error:", error);
         toast.error("Error fetching cart");
       }
     };
     fetchCart();
   }, []);
+
 
   const updateQuantity = async (productId, newQuantity) => {
     const user = JSON.parse(localStorage.getItem("user"));

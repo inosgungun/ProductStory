@@ -30,12 +30,45 @@ app.post("/api/send-otp", async (req, res) => {
     from: '"Product Story" <no-reply@productstory.com>',
     to: email,
     subject: "Verify your Email",
-    html: `<div style="font-family:sans-serif;text-align:center;">
-             <h2>Verify your email</h2>
-             <p>We just need to verify your email address. Enter the following code below to complete the verification process:</p>
-             <p style="font-size:24px;font-weight:bold;">${otp}</p>
-             <p>The code will expire in 10 minutes.</p>
-           </div>`,
+    html: `<div style="margin:0;padding:0;background-color:#f4f4f7;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+      <tr>
+        <td align="center" style="padding:40px 0;">
+          <table role="presentation" width="100%" max-width="600px" cellspacing="0" cellpadding="0" border="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+            <tr>
+              <td align="center" style="background-color:#4f46e5;padding:20px;">
+                <h1 style="color:#ffffff;font-size:24px;margin:0;">Product Story</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px 40px;text-align:left;color:#333333;">
+                <h2 style="margin-top:0;margin-bottom:20px;font-size:22px;color:#111111;">Verify your email</h2>
+                <p style="margin:0 0 20px;font-size:16px;line-height:1.5;">
+                  Thank you for signing up! To complete your registration, please enter the following verification code:
+                </p>
+                <div style="margin:30px 0;text-align:center;">
+                  <span style="display:inline-block;background-color:#f4f4f7;padding:15px 25px;font-size:24px;font-weight:bold;letter-spacing:2px;border-radius:6px;border:1px solid #dddddd;">
+                    ${otp}
+                  </span>
+                </div>
+                <p style="margin:0 0 20px;font-size:14px;color:#555555;">
+                  This code will expire in 10 minutes. If you didn't request this, you can safely ignore this email.
+                </p>
+                <p style="margin:40px 0 0;font-size:14px;color:#999999;">
+                  — The Product Story Team
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="background-color:#f4f4f7;padding:15px;font-size:12px;color:#999999;">
+                © 2025 Product Story. All rights reserved.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>`,
   });
 
   res.send({ message: "OTP sent" });
@@ -49,16 +82,52 @@ app.post("/api/verify-otp", async (req, res) => {
   }
 
   try {
-    delete otpStore[email]; 
+    delete otpStore[email];
 
     await transporter.sendMail({
       from: '"Product Story" <no-reply@productstory.com>',
       to: email,
       subject: "Login Successful",
-      html: `<div style="font-family:sans-serif;text-align:center;">
-               <h2>Welcome to Product Story!</h2>
-               <p>Your login was successful.</p>
-             </div>`
+      html: `
+  <div style="margin:0;padding:0;background-color:#f4f4f7;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+      <tr>
+        <td align="center" style="padding:40px 0;">
+          <table role="presentation" width="100%" max-width="600px" cellspacing="0" cellpadding="0" border="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+            <tr>
+              <td align="center" style="background-color:#4f46e5;padding:20px;">
+                <h1 style="color:#ffffff;font-size:24px;margin:0;">Product Story</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px 40px;text-align:left;color:#333333;">
+                <h2 style="margin-top:0;margin-bottom:20px;font-size:22px;color:#111111;">Login Successful</h2>
+                <p style="margin:0 0 20px;font-size:16px;line-height:1.5;">
+                  Hello,
+                </p>
+                <p style="margin:0 0 20px;font-size:16px;line-height:1.5;">
+                  We noticed a successful login to your Product Story account. If this was you, there’s nothing else you need to do.
+                </p>
+                <p style="margin:0 0 20px;font-size:16px;line-height:1.5;">
+                  If you didn’t login or suspect any unauthorized access, please <a href="https://productstory.com/security" style="color:#4f46e5;text-decoration:none;">secure your account immediately</a>.
+                </p>
+                <p style="margin:40px 0 0;font-size:14px;color:#999999;">
+                  — The Product Story Team
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="background-color:#f4f4f7;padding:15px;font-size:12px;color:#999999;">
+                © 2025 Product Story. All rights reserved.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+`
+
     });
 
     let user = await User.findOne({ email });
@@ -74,7 +143,7 @@ app.post("/api/verify-otp", async (req, res) => {
       });
     }
 
-    res.send({ success: true, user }); 
+    res.send({ success: true, user });
   } catch (error) {
     console.error("Verify OTP error:", error);
     res.status(500).send({ success: false, message: "Server error, try again" });
@@ -177,12 +246,12 @@ app.post("/api/cart/add", async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).send({ success: false, message: "User not found" });
-    
+
     const productIdNumber = Number(productId);
     if (isNaN(productIdNumber)) {
       return res.status(400).send({ success: false, message: "Invalid productId" });
     }
-    
+
     const existingItem = user.cart.find(item => item.productId === productIdNumber);
     if (existingItem) {
       existingItem.quantity += 1;
@@ -205,11 +274,15 @@ app.get("/api/cart", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    const productIds = user.cart.map(item => item.productId);
+    console.log("User cart items:", user.cart);
+
+    const productIds = user.cart.map(item => Number(item.productId));
     const products = await Product.find({ id: { $in: productIds } }).lean();
 
+    console.log("Fetched products:", products);
+
     const cartWithDetails = user.cart.map(item => {
-      const product = products.find(p => String(p.id) === String(item.productId));
+      const product = products.find(p => Number(p.id) === Number(item.productId));
       if (product) {
         return {
           productId: item.productId,
@@ -225,7 +298,7 @@ app.get("/api/cart", async (req, res) => {
 
     res.json({ success: true, cart: cartWithDetails });
   } catch (error) {
-    console.error(error);
+    console.error("Fetch cart error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -253,16 +326,16 @@ app.post("/api/cart/update", async (req, res) => {
 
     await user.save();
 
-    const productIds = user.cart.map(item => item.productId);
+    const productIds = user.cart.map(item => Number(item.productId));
     const products = await Product.find({ id: { $in: productIds } });
     const cartWithDetails = user.cart.map(item => {
-      const product = products.find(p => p.id === item.productId);
+      const product = products.find(p => Number(p.id) === Number(item.productId));
       if (product) {
         return {
           productId: item.productId,
           quantity: item.quantity,
-          price: product.price,
-          discountPercentage: product.discountPercentage,
+          price: Number(product.price) || 0,
+          discountPercentage: Number(product.discountPercentage) || 0,
           name: product.title,
           image: product.thumbnail
         };
