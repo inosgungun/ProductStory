@@ -4,6 +4,10 @@ import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import connectDB from "./lib/db.js";
 import User from "./models/user.js";
+import { render } from "@react-email/render";
+import React from "react";
+import LoginSuccessfulEmail from "./dist/emails/LoginSuccessfulEmail.js";
+import VerifyOtpEmail from "./dist/emails/VerifyOtpEmail.js";
 
 
 dotenv.config();
@@ -26,52 +30,21 @@ app.post("/api/send-otp", async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   otpStore[email] = otp;
 
-  await transporter.sendMail({
-    from: '"Product Story" <no-reply@productstory.com>',
-    to: email,
-    subject: "Verify your Email",
-    html: `<div style="margin:0;padding:0;background-color:#f4f4f7;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-      <tr>
-        <td align="center" style="padding:40px 0;">
-          <table role="presentation" width="100%" max-width="600px" cellspacing="0" cellpadding="0" border="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-            <tr>
-              <td align="center" style="background-color:#4f46e5;padding:20px;">
-                <h1 style="color:#ffffff;font-size:24px;margin:0;">Product Story</h1>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:30px 40px;text-align:left;color:#333333;">
-                <h2 style="margin-top:0;margin-bottom:20px;font-size:22px;color:#111111;">Verify your email</h2>
-                <p style="margin:0 0 20px;font-size:16px;line-height:1.5;">
-                  Thank you for signing up! To complete your registration, please enter the following verification code:
-                </p>
-                <div style="margin:30px 0;text-align:center;">
-                  <span style="display:inline-block;background-color:#f4f4f7;padding:15px 25px;font-size:24px;font-weight:bold;letter-spacing:2px;border-radius:6px;border:1px solid #dddddd;">
-                    ${otp}
-                  </span>
-                </div>
-                <p style="margin:0 0 20px;font-size:14px;color:#555555;">
-                  This code will expire in 10 minutes. If you didn't request this, you can safely ignore this email.
-                </p>
-                <p style="margin:40px 0 0;font-size:14px;color:#999999;">
-                  — The Product Story Team
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="background-color:#f4f4f7;padding:15px;font-size:12px;color:#999999;">
-                © 2025 Product Story. All rights reserved.
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </div>`,
-  });
+  try {
+    const emailHtml = await render(React.createElement(VerifyOtpEmail, { otp }));
 
-  res.send({ message: "OTP sent" });
+    await transporter.sendMail({
+      from: '"Product Story" <no-reply@productstory.com>',
+      to: email,
+      subject: "Verify your Email",
+      html: emailHtml,
+    });
+
+    res.send({ message: "OTP sent" });
+  } catch (error) {
+    console.error("Send OTP error:", error);
+    res.status(500).send({ success: false, message: "Server error, try again" });
+  }
 });
 
 app.post("/api/verify-otp", async (req, res) => {
@@ -84,50 +57,13 @@ app.post("/api/verify-otp", async (req, res) => {
   try {
     delete otpStore[email];
 
+    const emailHtml = await render(React.createElement(LoginSuccessfulEmail));
+
     await transporter.sendMail({
       from: '"Product Story" <no-reply@productstory.com>',
       to: email,
       subject: "Login Successful",
-      html: `
-  <div style="margin:0;padding:0;background-color:#f4f4f7;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-      <tr>
-        <td align="center" style="padding:40px 0;">
-          <table role="presentation" width="100%" max-width="600px" cellspacing="0" cellpadding="0" border="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-            <tr>
-              <td align="center" style="background-color:#4f46e5;padding:20px;">
-                <h1 style="color:#ffffff;font-size:24px;margin:0;">Product Story</h1>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:30px 40px;text-align:left;color:#333333;">
-                <h2 style="margin-top:0;margin-bottom:20px;font-size:22px;color:#111111;">Login Successful</h2>
-                <p style="margin:0 0 20px;font-size:16px;line-height:1.5;">
-                  Hello,
-                </p>
-                <p style="margin:0 0 20px;font-size:16px;line-height:1.5;">
-                  We noticed a successful login to your Product Story account. If this was you, there’s nothing else you need to do.
-                </p>
-                <p style="margin:0 0 20px;font-size:16px;line-height:1.5;">
-                  If you didn’t login or suspect any unauthorized access, please <a href="https://productstory.com/security" style="color:#4f46e5;text-decoration:none;">secure your account immediately</a>.
-                </p>
-                <p style="margin:40px 0 0;font-size:14px;color:#999999;">
-                  — The Product Story Team
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="background-color:#f4f4f7;padding:15px;font-size:12px;color:#999999;">
-                © 2025 Product Story. All rights reserved.
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </div>
-`
-
+      html: emailHtml,
     });
 
     let user = await User.findOne({ email });

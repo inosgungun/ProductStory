@@ -34,12 +34,12 @@ Whether you’re building a personal project, an internal tool, or the base of a
 
 ## ⚙️ Tech Stack
 
-| Layer      | Technology                                    |
+| Layer     | Technology                                    |
 |-----------|-----------------------------------------------|
 | Frontend  | Next.js, React, Tailwind CSS, shadcn/ui       |
-| Backend   | Node.js, Express.js                           |
+| Backend   | Node.js, Express.js, react-mail, esbuild      |
 | Database  | MongoDB                                       |
-| Icons     | Lucide React                                   |
+| Icons     | Lucide React                                  |
 
 
 
@@ -51,8 +51,6 @@ Whether you’re building a personal project, an internal tool, or the base of a
 git clone https://github.com/inosgungun/ProductStory.git
 cd product-story
 ```
-
-
 
 
 ### ⚙️ Backend Setup
@@ -76,8 +74,9 @@ MONGO_URI=mongodb+srv://<username>:<password>@cluster0.ekpha.mongodb.net/Product
 ```
 
 ### ▶️ Run the backend server
+>Build as well as start the server
 ```
-node index.js
+npm run dev
 ```
 
 

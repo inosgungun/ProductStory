@@ -6,12 +6,7 @@ const userSchema = new mongoose.Schema({
   contact: String,
   address: String,
   wishlist: [{ type: Number }],
-  cart: [{ productId: { type: Number }, quantity: { type: Number, default: 1 } }],
-  orderHistory: [{
-    productId: Number,
-    quantity: Number,
-    orderDate: Date
-  }]
+  cart: [{ productId: { type: Number }, quantity: { type: Number, default: 1 } }]
 }, { timestamps: true });
 
 export default mongoose.models.User || mongoose.model("User", userSchema);
