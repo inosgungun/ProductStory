@@ -9,7 +9,7 @@ export default function AuthCard() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [isResending, setIsResending] = useState(false);
-  const [cooldown, setCooldown] = useState(0); // cooldown seconds
+  const [cooldown, setCooldown] = useState(0); 
   const router = useRouter();
 
   const handleSendOtp = async () => {
@@ -22,7 +22,7 @@ export default function AuthCard() {
       if (res.ok) {
         toast.success("OTP sent to your email!");
         setStep("otp");
-        startCooldown(); // start cooldown after sending OTP
+        startCooldown(); 
       } else {
         toast.error("Failed to send OTP");
       }
@@ -52,14 +52,14 @@ export default function AuthCard() {
   };
 
   const handleResendOtp = async () => {
-    if (cooldown > 0) return; // prevent resending if cooldown active
+    if (cooldown > 0) return; 
     setIsResending(true);
     await handleSendOtp();
     setIsResending(false);
   };
 
   const startCooldown = () => {
-    setCooldown(30); // set cooldown seconds
+    setCooldown(30); 
     const interval = setInterval(() => {
       setCooldown(prev => {
         if (prev <= 1) {

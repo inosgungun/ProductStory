@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "build": "npm install && node build-emails.js",
-    "dev": "node build-emails.js && node index.js"
-  },
+  "start": "node index.js",
+  "build": "node build-emails.js",
+  "dev": "node build-emails.js && node index.js",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
