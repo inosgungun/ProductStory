@@ -32,7 +32,13 @@ const transporter = nodemailer.createTransport({
 });
 
 app.post("/api/send-otp", async (req, res) => {
+  console.log("Incoming request body:", req.body);
   const { email } = req.body;
+  console.log("Parsed email:", email); 
+
+  if (!email) {
+    return res.status(400).send({ success: false, message: "Email is required" });
+  }
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   otpStore[email] = otp;
 
