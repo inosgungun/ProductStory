@@ -12,7 +12,13 @@ import VerifyOtpEmail from "./dist/emails/VerifyOtpEmail.js";
 
 dotenv.config();
 const app = express();
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://productstoryfrontend.vercel.app'
+];
+
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 
 const otpStore = {};
